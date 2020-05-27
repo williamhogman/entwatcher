@@ -16,6 +16,7 @@ databases = {extras = ["sqlite"],version = "*"}
 orjson = "*"
 httpx = "*"
 black = "*"
+environs = "*"
 
 [requires]
 python_version = "3.8"

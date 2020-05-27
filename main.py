@@ -10,8 +10,12 @@ app = FastAPI()
 
 http_client = None
 
-DCOLLECT_BASE_URL = "http://127.0.0.1:8000"
-ENTWATCHER_BASE_URL = "http://127.0.0.1:8001"
+from environs import Env
+
+env = Env()
+
+DCOLLECT_BASE_URL = env("DCOLLECT_BASE_URL", "http://127.0.0.1:8000")
+ENTWATCHER_BASE_URL = env("ENTWATCHER_BASE_URL", "http://127.0.0.1:8001")
 
 
 @app.on_event("startup")
