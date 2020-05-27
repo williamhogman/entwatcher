@@ -4,5 +4,5 @@ COPY Pipfile Pipfile.lock /app/
 WORKDIR /app
 RUN pip install pipenv
 RUN pipenv install --system --deploy
-COPY . .
-CMD ["uvicorn", "--reload", "main:app"]
+COPY entwatcher /app/
+CMD ["uvicorn", "--reload", "entwatcher.main:app"]

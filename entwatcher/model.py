@@ -3,8 +3,8 @@ import databases
 DATABASE_URL = "sqlite:///./test.db"
 database = databases.Database(DATABASE_URL)
 
-SETUP_QUERIES = [
-]
+SETUP_QUERIES = []
+
 
 async def setup():
     await database.connect()
