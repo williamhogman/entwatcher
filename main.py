@@ -54,10 +54,12 @@ class SubscribeRequest(BaseModel):
 async def subscribe_to_watch(watcher: str, subscribe_request: SubscribeRequest):
     async with httpx.AsyncClient() as client:
         body_url = f"{ENTWATCHER_BASE_URL}/notify/{watcher}"
-        data = {"url": body_url}
-        for entity in subscribe_request.entities:
-            url = f"{DCOLLECT_BASE_URL}/entity/{entity}/watch"
-            resp = await client.post(url=url, json=data)
+        to_watch = [
+            {"url": body_url, "entity": entity} for entity in subscribe_request.entities
+        ]
+        data = {"to_watch": to_watch}
+        url = f"{DCOLLECT_BASE_URL}/watchMultiple"
+        resp = await client.post(url=url, json=data)
     await store_watcher_entity(watcher, subscribe_request.entities)
 
 
