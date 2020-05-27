@@ -2,7 +2,7 @@ import httpx
 from fastapi import FastAPI, Response
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel
-import model
+import entwatcher.model as model
 from typing import Any, List, Optional, Tuple
 import orjson
 
