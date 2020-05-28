@@ -3,7 +3,7 @@ from fastapi import FastAPI, Response
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel
 import entwatcher.model as model
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Dict
 import orjson
 
 app = FastAPI()
@@ -37,19 +37,19 @@ async def get_entity(entity: str):
     return resp.json()
 
 
-async def store_watcher_entity(watcher: str, entities: List[str]):
+async def store_watcher_entity(watcher: str, data):
     # data = {'entities': hash(orjson.dumps(entities))}
     async with httpx.AsyncClient() as client:
         # ingest
         url = f"{DCOLLECT_BASE_URL}/entity/{watcher}"
-        data = {"entities": entities}
         res = await client.post(url, json=data)
         res.raise_for_status()
         return res
 
 
 class SubscribeRequest(BaseModel):
-    entities: List[str]
+    entities: Dict[str, str]
+    trigger_url: str
 
 
 @app.post("/subscribe/{watcher}")
@@ -57,26 +57,30 @@ async def subscribe_to_watch(watcher: str, subscribe_request: SubscribeRequest):
     async with httpx.AsyncClient() as client:
         body_url = f"{ENTWATCHER_BASE_URL}/notify/{watcher}"
         to_watch = [
-            {"url": body_url, "entity": entity} for entity in subscribe_request.entities
+            {"url": body_url, "entity": entity} for entity in subscribe_request.entities.values()
         ]
         data = {"to_watch": to_watch}
         url = f"{DCOLLECT_BASE_URL}/watchMultiple"
         resp = await client.post(url=url, json=data)
         resp.raise_for_status()
-    await store_watcher_entity(watcher, subscribe_request.entities)
+    await store_watcher_entity(watcher, subscribe_request.dict())
 
 
 @app.post("/notify/{watcher}")
 async def notify(watcher: str):
     watcher_data = await get_entity(watcher)
+    entities = watcher_data.get("entities", {})
+    entities_data = { k: await get_entity(entities[k]) for k in entities }
 
-    entities_data = []
-    for entity in watcher_data["entities"]:
-        entities_data.append(await get_entity(entity))
+    trigger_url = watcher_data.get("trigger_url")
 
-    # do something with entities_data
-    print(entities_data)
+    if trigger_url is None:
+        print(watcher, "Missing trigger_url")
+        return
 
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(trigger_url, json=entities_data)
+        resp.raise_for_status()
 
 @app.get("/list/{watcher}")
 async def list_entities(watcher: str):
