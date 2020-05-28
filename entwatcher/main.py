@@ -33,7 +33,7 @@ async def shutdown():
 async def get_entity(entity: str):
     async with httpx.AsyncClient() as client:
         resp = await client.get(f"{DCOLLECT_BASE_URL}/entity/{entity}")
-    # data
+        resp.raise_for_status()
     return resp.json()
 
 
@@ -43,7 +43,9 @@ async def store_watcher_entity(watcher: str, entities: List[str]):
         # ingest
         url = f"{DCOLLECT_BASE_URL}/entity/{watcher}"
         data = {"entities": entities}
-        return await client.post(url, json=data)
+        res = await client.post(url, json=data)
+        res.raise_for_status()
+        return res
 
 
 class SubscribeRequest(BaseModel):
@@ -60,6 +62,7 @@ async def subscribe_to_watch(watcher: str, subscribe_request: SubscribeRequest):
         data = {"to_watch": to_watch}
         url = f"{DCOLLECT_BASE_URL}/watchMultiple"
         resp = await client.post(url=url, json=data)
+        resp.raise_for_status()
     await store_watcher_entity(watcher, subscribe_request.entities)
 
 
