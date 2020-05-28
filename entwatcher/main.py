@@ -77,14 +77,19 @@ async def list_entities(watcher: str):
     return await get_entity(watcher)
 
 
-# TODO: Need to implement delete or forget entity in dcollect first
-# @app.post("/unsubscribe/{watcher}")
-# async def unsubscribe_to_watch(watcher: str, entities: List[str]):
-#     baseurl = ''
-#     body_url = f'{baseurl}/notify/{watcher}'
-#     body = {'url': body_url}
+@app.post("/unsubscribe/{watcher}")
+async def unsubscribe_to_watch(watcher: str, entities: List[str]):
+    sub_data = None
+    try:
+        sub_data = SubscribeRequest(**(await get_entity(watcher)))
+    except:
+        return Response(status_code=500)
 
-#     for entity in entities:
-#         # TODO: add url
-#         url = f'/entity/{entity}/unwatch'
-#         resp = await http_client.post(url, body=body)
+    body_url = f"{ENTWATCHER_BASE_URL}/unwatchMultiple"
+    to_watch = [
+        {"url": body_url, "entity": entity} for entity in subscribe_request.entities.values()
+    ]
+    for entity in entities:
+        url = f'/entity/{entity}/unwatch'
+        resp = await http_client.post(url, json={ "to_watch": to_watch })
+        resp.raise_for_status()
