@@ -2,7 +2,6 @@ import httpx
 from fastapi import FastAPI, Response
 from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel
-import entwatcher.model as model
 from typing import Any, List, Optional, Tuple, Dict
 import orjson
 
@@ -21,14 +20,10 @@ ENTWATCHER_BASE_URL = env("ENTWATCHER_BASE_URL", "http://127.0.0.1:8001")
 @app.on_event("startup")
 async def startup():
     http_client = httpx.AsyncClient()
-    await model.setup()
-
 
 @app.on_event("shutdown")
 async def shutdown():
     await http_client.aclose()
-    await model.teardown()
-
 
 async def get_entity(entity: str):
     async with httpx.AsyncClient() as client:

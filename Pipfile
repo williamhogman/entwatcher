@@ -12,10 +12,8 @@ isort = {extras = ["pipfile"],version = "*"}
 [packages]
 fastapi = "*"
 uvicorn = "*"
-databases = {extras = ["sqlite"],version = "*"}
 orjson = "*"
 httpx = "*"
-black = "*"
 environs = "*"
 
 [requires]
