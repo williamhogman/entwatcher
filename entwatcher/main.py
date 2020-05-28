@@ -48,14 +48,19 @@ class SubscribeRequest(BaseModel):
     trigger_url: str
 
 
+
+def assemble_watch_request(url: str, entities: List[str]) -> Dict[str, Any]:
+    to_watch = [
+        {"url": url, "entity": entity}
+        for entity in entities
+    ]
+    return {"to_watch": to_watch}
+
+
 @app.post("/subscribe/{watcher}")
 async def subscribe_to_watch(watcher: str, subscribe_request: SubscribeRequest):
     body_url = f"{ENTWATCHER_BASE_URL}/notify/{watcher}"
-    to_watch = [
-        {"url": body_url, "entity": entity}
-        for entity in subscribe_request.entities.values()
-    ]
-    data = {"to_watch": to_watch}
+    assemble_watch_request(body_url, subscribe_request.entities.values())
     url = f"{DCOLLECT_BASE_URL}/watchMultiple"
     resp = await client.post(url=url, json=data)
     resp.raise_for_status()
@@ -93,11 +98,7 @@ async def unsubscribe_to_watch(watcher: str, entities: List[str]):
     if sub_data is None:
         return Response(status_code=500)
 
-    body_url = f"{ENTWATCHER_BASE_URL}/unwatchMultiple"
-    to_watch = [
-        {"url": body_url, "entity": entity} for entity in sub_data.entities.values()
-    ]
-    for entity in entities:
-        url = f"/entity/{entity}/unwatch"
-        resp = await http_client.post(url, json={"to_watch": to_watch})
-        resp.raise_for_status()
+    body_url = f"{ENTWATCHER_BASE_URL}/notify/{watcher}"
+    url = f"{ENTWATCHER_BASE_URL}/unwatchMultiple"
+    resp = await http_client.post(url, json=assemble_watch_request(body_url, sub_data.entities))
+    resp.raise_for_status()
