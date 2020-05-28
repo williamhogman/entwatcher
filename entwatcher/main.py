@@ -69,17 +69,19 @@ async def subscribe_to_watch(watcher: str, subscribe_request: SubscribeRequest):
 @app.post("/notify/{watcher}")
 async def notify(watcher: str):
     watcher_data = await get_entity(watcher)
-    entities = watcher_data.get("entities", {})
-    entities_data = { k: await get_entity(entities[k]) for k in entities }
+    sub_data = None
+    try:
+        sub_data = SubscribeRequest(**watcher_data)
+    except:
+        return Response(status_code=500)
+    entities_data = { k: await get_entity(v) for (k, v) in sub_data.entities.items() }
 
-    trigger_url = watcher_data.get("trigger_url")
-
-    if trigger_url is None:
+    if sub_data.trigger_url is None:
         print(watcher, "Missing trigger_url")
         return
 
     async with httpx.AsyncClient() as client:
-        resp = await client.post(trigger_url, json=entities_data)
+        resp = await client.post(sub_data.trigger_url, json=entities_data)
         resp.raise_for_status()
 
 @app.get("/list/{watcher}")
