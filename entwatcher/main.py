@@ -7,7 +7,7 @@ import orjson
 
 app = FastAPI()
 
-http_client = None
+http_client = httpx.AsyncClient()
 
 from environs import Env
 
@@ -17,29 +17,23 @@ DCOLLECT_BASE_URL = env("DCOLLECT_BASE_URL", "http://127.0.0.1:8000")
 ENTWATCHER_BASE_URL = env("ENTWATCHER_BASE_URL", "http://127.0.0.1:8001")
 
 
-@app.on_event("startup")
-async def startup():
-    http_client = httpx.AsyncClient()
-
 @app.on_event("shutdown")
 async def shutdown():
     await http_client.aclose()
 
 async def get_entity(entity: str):
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{DCOLLECT_BASE_URL}/entity/{entity}")
-        resp.raise_for_status()
+    resp = await http_client.get(f"{DCOLLECT_BASE_URL}/entity/{entity}")
+    resp.raise_for_status()
     return resp.json()
 
 
 async def store_watcher_entity(watcher: str, data):
     # data = {'entities': hash(orjson.dumps(entities))}
-    async with httpx.AsyncClient() as client:
-        # ingest
-        url = f"{DCOLLECT_BASE_URL}/entity/{watcher}"
-        res = await client.post(url, json=data)
-        res.raise_for_status()
-        return res
+    # ingest
+    url = f"{DCOLLECT_BASE_URL}/entity/{watcher}"
+    res = await http_client.post(url, json=data)
+    res.raise_for_status()
+    return res
 
 
 class SubscribeRequest(BaseModel):
@@ -49,15 +43,14 @@ class SubscribeRequest(BaseModel):
 
 @app.post("/subscribe/{watcher}")
 async def subscribe_to_watch(watcher: str, subscribe_request: SubscribeRequest):
-    async with httpx.AsyncClient() as client:
-        body_url = f"{ENTWATCHER_BASE_URL}/notify/{watcher}"
-        to_watch = [
-            {"url": body_url, "entity": entity} for entity in subscribe_request.entities.values()
-        ]
-        data = {"to_watch": to_watch}
-        url = f"{DCOLLECT_BASE_URL}/watchMultiple"
-        resp = await client.post(url=url, json=data)
-        resp.raise_for_status()
+    body_url = f"{ENTWATCHER_BASE_URL}/notify/{watcher}"
+    to_watch = [
+        {"url": body_url, "entity": entity} for entity in subscribe_request.entities.values()
+    ]
+    data = {"to_watch": to_watch}
+    url = f"{DCOLLECT_BASE_URL}/watchMultiple"
+    resp = await client.post(url=url, json=data)
+    resp.raise_for_status()
     await store_watcher_entity(watcher, subscribe_request.dict())
 
 
