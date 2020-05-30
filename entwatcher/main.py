@@ -75,7 +75,7 @@ async def notify(watcher: str):
     if sub_data is None:
         return Response(status_code=500)
 
-    entities_data = await assembled_data(sub_data.entities)
+    entities_data = await assemble_data(sub_data.entities)
 
     if sub_data.trigger_url is None:
         print(watcher, "Missing trigger_url")
