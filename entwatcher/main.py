@@ -34,6 +34,10 @@ async def store_watcher_entity(watcher: str, data):
     res.raise_for_status()
     return res
 
+class SubscribeRequest(BaseModel):
+    entities: Dict[str, str]
+    trigger_url: str
+
 
 async def read_watcher_entity(watcher: str) -> Optional[SubscribeRequest]:
     watcher_data = await get_entity(watcher)
@@ -41,12 +45,6 @@ async def read_watcher_entity(watcher: str) -> Optional[SubscribeRequest]:
         return SubscribeRequest(**watcher_data)
     except:
         return None
-
-
-class SubscribeRequest(BaseModel):
-    entities: Dict[str, str]
-    trigger_url: str
-
 
 
 def assemble_watch_request(url: str, entities: List[str]) -> Dict[str, Any]:
@@ -60,9 +58,9 @@ def assemble_watch_request(url: str, entities: List[str]) -> Dict[str, Any]:
 @app.post("/subscribe/{watcher}")
 async def subscribe_to_watch(watcher: str, subscribe_request: SubscribeRequest):
     body_url = f"{ENTWATCHER_BASE_URL}/notify/{watcher}"
-    assemble_watch_request(body_url, subscribe_request.entities.values())
+    data = assemble_watch_request(body_url, subscribe_request.entities.values())
     url = f"{DCOLLECT_BASE_URL}/watchMultiple"
-    resp = await client.post(url=url, json=data)
+    resp = await http_client.post(url=url, json=data)
     resp.raise_for_status()
     await store_watcher_entity(watcher, subscribe_request.dict())
 
