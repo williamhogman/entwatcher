@@ -100,3 +100,11 @@ async def unsubscribe_to_watch(watcher: str, entities: List[str]):
     url = f"{ENTWATCHER_BASE_URL}/unwatchMultiple"
     resp = await http_client.post(url, json=assemble_watch_request(body_url, sub_data.entities))
     resp.raise_for_status()
+
+@app.get("/status/healthz")
+async def healthz():
+    return {"status": True}
+
+@app.get("/status/readyz")
+async def readyz():
+    return {"status": True}
