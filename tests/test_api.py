@@ -13,6 +13,7 @@ def test_healthz():
     res = client.get("/status/healthz")
     assert res.status_code == 200
 
+
 def test_readyz():
     res = client.get("/status/readyz")
     assert res.status_code == 200
