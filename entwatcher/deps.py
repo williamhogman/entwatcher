@@ -19,5 +19,5 @@ def http_client() -> httpx.AsyncClient:
 def dcollect(httpc=Depends(http_client)):
     global dcollect_
     if dcollect_ is None:
-        dcollect_ = DCollectClient(http_client)
+        dcollect_ = DCollectClient(httpc)
     return dcollect_

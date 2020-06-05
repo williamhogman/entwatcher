@@ -42,4 +42,4 @@ async def subscribe_to_watch(
     body_url = f"{ENTWATCHER_BASE_URL}/notify/{watcher}"
     data = assemble_watch_request(body_url, subscribe_request.entities.values())
     await dc.watch_multiple(data)
-    await dc.store_watcher_entity(watcher, subscribe_request.dict())
+    await dc.store_entity(watcher, subscribe_request.dict())
