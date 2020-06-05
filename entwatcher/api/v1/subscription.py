@@ -31,7 +31,7 @@ async def unsubscribe_to_watch(
     if sub_data is None:
         return Response(status_code=500)
 
-    body_url = f"{ENTWATCHER_BASE_URL}/notify/{watcher}"
+    body_url = f"{ENTWATCHER_BASE_URL}/v1/notify/{watcher}"
     dc.unwatch_multiple(assemble_watch_request(body_url, sub_data.entities.values()))
 
 
@@ -39,7 +39,7 @@ async def unsubscribe_to_watch(
 async def subscribe_to_watch(
     watcher: str, subscribe_request: SubscribeRequest, dc=Depends(deps.dcollect)
 ):
-    body_url = f"{ENTWATCHER_BASE_URL}/notify/{watcher}"
+    body_url = f"{ENTWATCHER_BASE_URL}/v1/notify/{watcher}"
     data = assemble_watch_request(body_url, subscribe_request.entities.values())
     await dc.watch_multiple(data)
     await dc.store_entity(watcher, subscribe_request.dict())
