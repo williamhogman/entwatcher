@@ -10,10 +10,10 @@ client = TestClient(main.app)
 
 
 def test_healthz():
-    res = client.get("/status/healthz")
+    res = client.get("/v1/status/healthz")
     assert res.status_code == 200
 
 
 def test_readyz():
-    res = client.get("/status/readyz")
+    res = client.get("/v1/status/readyz")
     assert res.status_code == 200
