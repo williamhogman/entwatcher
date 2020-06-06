@@ -1,12 +1,17 @@
+import os
 from typing import Optional
 
 import httpx
 from fastapi import Depends
 
+import aredis # type: ignore
 from entwatcher.dcollect import DCollectClient
+from entwatcher.routing import NotificationRouter
 
 dcollect_: Optional[DCollectClient] = None
 http_client_: Optional[httpx.AsyncClient] = None
+redis_: Optional[aredis.StrictRedis] = None
+notification_router_: Optional[NotificationRouter] = None
 
 
 def http_client() -> httpx.AsyncClient:
@@ -21,3 +26,20 @@ def dcollect(httpc=Depends(http_client)):
     if dcollect_ is None:
         dcollect_ = DCollectClient(httpc)
     return dcollect_
+
+
+def redis() -> aredis.StrictRedis:
+    global redis_
+    if redis_ is None:
+        redis_ = aredis.StrictRedis.from_url(os.environ["REDIS_URL"])
+    return redis_
+
+
+async def notification_router(
+    redis: aredis.StrictRedis = Depends(redis),
+) -> NotificationRouter:
+    global notification_router_
+    if notification_router_ is None:
+        notification_router_ = NotificationRouter(redis)
+        await notification_router_.setup()
+    return notification_router_
