@@ -7,6 +7,7 @@ from fastapi.responses import Response
 import entwatcher.deps as deps
 from entwatcher.dcollect import DCollectClient
 from entwatcher.model import SubscribeRequest
+from entwatcher.routing import RoutingTableEntry, NotificationRouter
 
 ENTWATCHER_BASE_URL = os.environ.get("ENTWATCHER_BASE_URL", "http://127.0.0.1:8001")
 
@@ -37,9 +38,16 @@ async def unsubscribe_to_watch(
 
 @router.post("/subscribe/{watcher}")
 async def subscribe_to_watch(
-    watcher: str, subscribe_request: SubscribeRequest, dc=Depends(deps.dcollect)
+        watcher: str, subscribe_request: SubscribeRequest, dc=Depends(deps.dcollect),
+        nr: NotificationRouter = Depends(deps.notification_router)
 ):
-    body_url = f"{ENTWATCHER_BASE_URL}/v1/notify/{watcher}"
-    data = assemble_watch_request(body_url, subscribe_request.entities.values())
-    await dc.watch_multiple(data)
-    await dc.store_entity(watcher, subscribe_request.dict())
+    action = {
+        "kind": subscribe_request.trigger_url,
+        "properties": subscribe_request.entities
+    }
+    action_ent = f"entwatcher.{watcher}"
+    await dc.store_entity(watcher, action)
+
+    routing_entries = [RoutingTableEntry(path=val, action_id=watcher, is_absolute=True) for val in subscribe_request.entities.values()]
+
+    await nr.add_many(routing_entries)

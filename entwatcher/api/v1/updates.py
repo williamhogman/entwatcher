@@ -25,17 +25,18 @@ URL_MAP = {"TriggerDAG": "http://compgraph:8000/triggerProcess"}
 async def trigger_action(dc: DCollectClient, http_client, action_id: str):
     ent = await dc.get_entity(action_id)
     if ent is None:
-        return ent
+        return
     cmd = Command(**ent)
 
-    url = URL_MAP.get(cmd.kind)
-    if url is None:
-        return None
+    url = URL_MAP.get(cmd.kind, cmd.kind)
+
     entities_data = {
-        k: await v if k[0] == "$" else dc.get_entity(v)
-        for (k, v) in cmd.properties.values()
+        k: await dc.get_entity(v)
+        for (k, v) in cmd.properties.items()
     }
-    http_client.post(url, json=entities_data)
+    print(entities_data)
+    resp = await http_client.post(url, json=entities_data)
+    resp.raise_for_status()
 
 
 @router.post("/updates")

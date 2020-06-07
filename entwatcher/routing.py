@@ -91,7 +91,7 @@ class Persister:
                 pipe.sadd(_absolute_router_key(entry.path), entry.action_id)
             else:
                 await pipe.sadd(ROUTING_TABLE_KEY, entry.to_bin())
-                await pipe.publish(ROUTING_TABLE_EVENT)
+                await pipe.publish(ROUTING_TABLE_EVENT, self.client_id)
 
     async def get_absolute_entries(self, entry: str):
         return await self.redis.smembers(_absolute_router_key(entry))
@@ -116,10 +116,14 @@ class NotificationRouter:
             self.table.replace(updated)
 
     async def add(self, entry: RoutingTableEntry):
-        # TODO: Remove from table on to avoid items being added to the
+        # TODO: Remove from table on error to avoid items being added to the
         # active table but not the local one
         self.table.add(entry)
-        await self.table.add(entry)
+        await self.persister.add(entry)
+
+    async def add_many(self, entries: Iterable[RoutingTableEntry]):
+        for ent in entries:
+            await self.add(ent)
 
     async def matches(self, path: str) -> AsyncGenerator[str, None]:
         # Start with the local prefix matches
