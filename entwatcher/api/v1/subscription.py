@@ -28,12 +28,7 @@ async def unsubscribe_to_watch(
     dc=Depends(deps.dcollect),
     http_client=Depends(deps.http_client),
 ):
-    sub_data = await dc.read_watcher_entity(dc, watcher)
-    if sub_data is None:
-        return Response(status_code=500)
-
-    body_url = f"{ENTWATCHER_BASE_URL}/v1/notify/{watcher}"
-    dc.unwatch_multiple(assemble_watch_request(body_url, sub_data.entities.values()))
+    raise RuntimeError("Not yet implemented")
 
 
 @router.post("/subscribe/{watcher}")

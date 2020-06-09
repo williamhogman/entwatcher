@@ -17,20 +17,14 @@ class DCollectClient:
         else:
             self.url = url
 
-    async def get_entity(self, entity: str) -> dict:
-        resp = await self.http_client.get(f"{self.url}/entity/{entity}")
+    async def get_pointer(self, entity: str) -> bytes:
+        resp = await self.http_client.get(f"{self.url}/entity-ptr/{entity}")
         resp.raise_for_status()
-        return resp.json()
+        return await resp.aread()
+
 
     async def store_entity(self, entity: str, data: dict):
         url = f"{self.url}/entity/{entity}"
         res = await self.http_client.post(url, json=data)
         res.raise_for_status()
         return res
-
-    async def read_watcher_entity(self, watcher: str) -> Optional[SubscribeRequest]:
-        watcher_data = await self.get_entity(watcher)
-        try:
-            return SubscribeRequest(**watcher_data)
-        except:
-            return None

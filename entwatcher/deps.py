@@ -7,11 +7,13 @@ from fastapi import Depends
 import aredis # type: ignore
 from entwatcher.dcollect import DCollectClient
 from entwatcher.routing import NotificationRouter
+from entwatcher.cas import CAS
 
 dcollect_: Optional[DCollectClient] = None
 http_client_: Optional[httpx.AsyncClient] = None
 redis_: Optional[aredis.StrictRedis] = None
 notification_router_: Optional[NotificationRouter] = None
+cas_: Optional[CAS] = None
 
 
 def http_client() -> httpx.AsyncClient:
@@ -43,3 +45,10 @@ async def notification_router(
         notification_router_ = NotificationRouter(redis)
         await notification_router_.setup()
     return notification_router_
+
+
+async def cas(http_client: httpx.AsyncClient = Depends(http_client)) -> CAS:
+    global cas_
+    if cas_ is None:
+        cas_ = CAS(http_client)
+    return cas_
