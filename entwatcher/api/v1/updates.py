@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
@@ -19,7 +20,12 @@ class Command(BaseModel):
     properties: dict
 
 
-URL_MAP = {"TriggerDAG": "http://compgraph:8000/triggerProcess"}
+ACTIONS_BASE_URL = os.environ.get("ACTIONS_BASE_URL", "http://127.0.0.1:8002")
+
+
+INTERNAL_ACTION = f"{ACTIONS_BASE_URL}/internal/compute"
+# maybe use action_id as key instead
+EXTERNAL_URL_MAP = {"TriggerDAG": "http://compgraph:8000/triggerProcess"}
 
 
 async def trigger_action(dc: DCollectClient, http_client, action_id: str):
@@ -28,15 +34,20 @@ async def trigger_action(dc: DCollectClient, http_client, action_id: str):
         return
     cmd = Command(**ent)
 
-    url = URL_MAP.get(cmd.kind, cmd.kind)
-
     entities_data = {
         k: await dc.get_entity(v)
         for (k, v) in cmd.properties.items()
     }
-    print(entities_data)
-    resp = await http_client.post(url, json=entities_data)
+    url = EXTERNAL_URL_MAP.get(cmd.kind)
+    if url is not None:
+        body = entities_data
+    else:
+        url = INTERNAL_ACTION
+        body = {'kind': cmd.kind, 'properties': entities_data}
+
+    resp = await http_client.post(url, json=body)
     resp.raise_for_status()
+    return resp.json()
 
 
 @router.post("/updates")
