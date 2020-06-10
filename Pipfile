@@ -14,8 +14,6 @@ fastapi = "*"
 uvicorn = "*"
 orjson = "*"
 httpx = "*"
-environs = "*"
-pygtrie = "*"
 aredis = "*"
 
 [requires]
