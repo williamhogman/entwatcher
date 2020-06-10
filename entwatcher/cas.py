@@ -14,7 +14,10 @@ class CAS:
     async def store(self, data: Dict[any, any]) -> bytes:
         resp = await self.http.post(f"{self.base_url}/v1/store", json=data)
         resp.raise_for_status()
-        return await resp.aread()
+        res = await resp.aread()
+        if res == b'':
+            raise RuntimeError("Received blank response")
+        return res
 
     async def get(self, key: bytes) -> bytes:
         resp = await self.http.post(f"{self.base_url}/v1/get", data=key)

@@ -20,11 +20,14 @@ class DCollectClient:
     async def get_pointer(self, entity: str) -> bytes:
         resp = await self.http_client.get(f"{self.url}/entity-ptr/{entity}")
         resp.raise_for_status()
+        if resp.status_code == 404:
+            return None
         return await resp.aread()
 
-
-    async def store_entity(self, entity: str, data: dict):
-        url = f"{self.url}/entity/{entity}"
-        res = await self.http_client.post(url, json=data)
+    async def store_ptr(self, entity: str, ptr: bytes):
+        if not ptr:
+            raise RuntimeError("ptr is empty or None")
+        url = f"{self.url}/entity-ptr/{entity}"
+        res = await self.http_client.post(url, data=ptr)
         res.raise_for_status()
         return res

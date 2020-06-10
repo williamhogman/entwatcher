@@ -30,7 +30,10 @@ EXTERNAL_URL_MAP = {"TriggerDAG": "http://compgraph:8000/triggerProcess"}
 
 
 async def fetch(cas, dc, ptr):
-    return await cas.get(await dc.get_pointer(ptr))
+    ptr = await dc.get_pointer(ptr)
+    if ptr is None:
+        return None
+    return await cas.get(ptr)
 
 
 async def trigger_action(cas, dc: DCollectClient, http_client, action_id: str):
@@ -40,7 +43,7 @@ async def trigger_action(cas, dc: DCollectClient, http_client, action_id: str):
     cmd = Command(**ent)
 
     entities_data = {
-        k: await fetch(cas, dc, ptr)
+        k: orjson.loads(await fetch(cas, dc, v))
         for (k, v) in cmd.properties.items()
     }
     url = EXTERNAL_URL_MAP.get(cmd.kind)

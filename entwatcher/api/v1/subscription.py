@@ -34,15 +34,19 @@ async def unsubscribe_to_watch(
 @router.post("/subscribe/{watcher}")
 async def subscribe_to_watch(
         watcher: str, subscribe_request: SubscribeRequest, dc=Depends(deps.dcollect),
-        nr: NotificationRouter = Depends(deps.notification_router)
+        nr: NotificationRouter = Depends(deps.notification_router),
+        cas = Depends(deps.cas)
 ):
     action = {
         "kind": subscribe_request.trigger_url,
         "properties": subscribe_request.entities
     }
     action_ent = f"entwatcher.{watcher}"
-    await dc.store_entity(watcher, action)
+    ptr = await cas.store(action)
+    if ptr is None:
+        raise RuntimeError("ptr was None")
+    await dc.store_ptr(action_ent, ptr)
 
-    routing_entries = [RoutingTableEntry(path=val, action_id=watcher, is_absolute=True) for val in subscribe_request.entities.values()]
+    routing_entries = [RoutingTableEntry(path=val, action_id=action_ent, is_absolute=True) for val in subscribe_request.entities.values()]
 
     await nr.add_many(routing_entries)
