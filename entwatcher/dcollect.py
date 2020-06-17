@@ -21,11 +21,3 @@ class DCollectClient:
         if resp.status_code == 404:
             return None
         return await resp.aread()
-
-    async def store_ptr(self, entity: str, ptr: bytes):
-        if not ptr:
-            raise RuntimeError("ptr is empty or None")
-        url = f"{self.url}/entity-ptr/{entity}"
-        res = await self.http_client.post(url, data=ptr)
-        res.raise_for_status()
-        return res
