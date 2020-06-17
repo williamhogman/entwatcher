@@ -48,6 +48,15 @@ class NotificationRouter:
         for ent in entries:
             await self.add(ent)
 
-    async def matches(self, path: str) -> AsyncGenerator[str, None]:
+    async def add_many_for_action(self, entities: Iterable[str], action_id: str):
+        """Adds watches between the entities listed and the action_id provided"""
+        await self.add_many(
+            RoutingTableEntry(path=val, action_id=action_id, is_absolute=True)
+            for val in entities
+        )
+
+    async def matches(self, path: str) -> AsyncGenerator[bytes, None]:
+        if path.startswith("_conthesis.watcher."):
+            yield b"_conthesis.UpdateWatcher"
         for x in await self.redis.sunion(list(get_path_keys(path))):
             yield x
