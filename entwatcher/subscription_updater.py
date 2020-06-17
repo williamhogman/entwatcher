@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 import entwatcher.deps as deps
 from entwatcher.entity_fetcher import EntityFetcher

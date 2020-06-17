@@ -1,7 +1,7 @@
 import asyncio
 import os
-import orjson
 
+import orjson
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from pydantic import BaseModel

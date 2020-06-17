@@ -2,8 +2,8 @@ from typing import Optional
 
 import orjson
 
-from entwatcher.dcollect import DCollectClient
 from entwatcher.cas import CAS
+from entwatcher.dcollect import DCollectClient
 
 
 class EntityFetcher:

@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple, AsyncGenerator, List
+from typing import AsyncGenerator, Iterable, List, Tuple
 
 from pydantic import BaseModel
 

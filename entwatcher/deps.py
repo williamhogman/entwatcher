@@ -1,14 +1,14 @@
 import os
 from typing import Optional
 
+import aredis  # type: ignore
 import httpx
 from fastapi import Depends
 
-import aredis  # type: ignore
-from entwatcher.dcollect import DCollectClient
-from entwatcher.routing import NotificationRouter
 from entwatcher.cas import CAS
+from entwatcher.dcollect import DCollectClient
 from entwatcher.entity_fetcher import EntityFetcher
+from entwatcher.routing import NotificationRouter
 from entwatcher.subscription_updater import SubscriptionUpdater
 
 dcollect_: Optional[DCollectClient] = None
