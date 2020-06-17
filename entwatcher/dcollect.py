@@ -3,8 +3,6 @@ from typing import Dict, Optional
 
 import httpx
 
-from entwatcher.model import SubscribeRequest
-
 
 class DCollectClient:
     http_client: httpx.AsyncClient

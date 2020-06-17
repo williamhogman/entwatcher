@@ -7,6 +7,7 @@ import httpx
 class CAS:
     base_url: str
     http: httpx.AsyncClient
+
     def __init__(self, http: httpx.AsyncClient):
         self.http = http
         self.base_url = os.environ["CAS_URL"]
@@ -15,7 +16,7 @@ class CAS:
         resp = await self.http.post(f"{self.base_url}/v1/store", json=data)
         resp.raise_for_status()
         res = await resp.aread()
-        if res == b'':
+        if res == b"":
             raise RuntimeError("Received blank response")
         return res
 

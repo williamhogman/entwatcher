@@ -4,7 +4,7 @@ from typing import Optional
 import httpx
 from fastapi import Depends
 
-import aredis # type: ignore
+import aredis  # type: ignore
 from entwatcher.dcollect import DCollectClient
 from entwatcher.routing import NotificationRouter
 from entwatcher.cas import CAS
@@ -43,7 +43,6 @@ async def notification_router(
     global notification_router_
     if notification_router_ is None:
         notification_router_ = NotificationRouter(redis)
-        await notification_router_.setup()
     return notification_router_
 
 

@@ -22,11 +22,7 @@ class Command(BaseModel):
 
 
 ACTIONS_BASE_URL = os.environ.get("ACTIONS_BASE_URL", "http://127.0.0.1:8002")
-
-
 INTERNAL_ACTION = f"{ACTIONS_BASE_URL}/internal/compute"
-# maybe use action_id as key instead
-EXTERNAL_URL_MAP = {"TriggerDAG": "http://compgraph:8000/triggerProcess"}
 
 
 async def fetch(cas, dc, ptr):
@@ -43,17 +39,10 @@ async def trigger_action(cas, dc: DCollectClient, http_client, action_id: str):
     cmd = Command(**ent)
 
     entities_data = {
-        k: orjson.loads(await fetch(cas, dc, v))
-        for (k, v) in cmd.properties.items()
+        k: orjson.loads(await fetch(cas, dc, v)) for (k, v) in cmd.properties.items()
     }
-    url = EXTERNAL_URL_MAP.get(cmd.kind)
-    if url is not None:
-        body = entities_data
-    else:
-        url = INTERNAL_ACTION
-        body = {'kind': cmd.kind, 'properties': entities_data}
-
-    resp = await http_client.post(url, json=body)
+    body = {"kind": cmd.kind, "properties": entities_data}
+    resp = await http_client.post(INTERNAL_ACTION, json=body)
     resp.raise_for_status()
     return resp.json()
 
@@ -62,10 +51,13 @@ async def trigger_action(cas, dc: DCollectClient, http_client, action_id: str):
 async def notify(
     data: UpdateNotification,
     dc: DCollectClient = Depends(deps.dcollect),
-    cas = Depends(deps.cas),
+    cas=Depends(deps.cas),
     notification_router=Depends(deps.notification_router),
     http_client=Depends(deps.http_client),
 ):
     matches = notification_router.matches(data.entity)
-    actions = [trigger_action(cas, dc, http_client, action_id) async for action_id in matches]
+    actions = [
+        trigger_action(cas, dc, http_client, action_id.decode("utf-8"))
+        async for action_id in matches
+    ]
     await asyncio.gather(*actions)
