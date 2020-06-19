@@ -2,12 +2,18 @@ import asyncio
 
 
 async def amain():
-    from .entwatcher import Entwatcher
+    try:
+        from .entwatcher import Entwatcher
 
-    ew = Entwatcher()
-    await ew.setup()
+        ew = Entwatcher()
+        await ew.setup()
 
-    await ew.wait_for_shutdown()
+
+    except ex as Exception:
+        print(ex)
+    finally:
+        await ew.wait_for_shutdown()
+
 
 
 def main():

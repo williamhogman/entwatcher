@@ -14,7 +14,7 @@ from entwatcher.updates import UpdatesWorker
 
 NOTIFY_TOPIC = "entity-updates-v1"
 NOTIFY_QUEUE = "entwatcher-queue"
-
+NOTIFY_UPDATE_ACCEPTED = "entity-updates-v1.accepted"
 
 class MessageHandler:
     nc: NATS
@@ -29,7 +29,7 @@ class MessageHandler:
             loop=asyncio.get_running_loop(),
         )
         self.sub = await self.nc.subscribe(
-            NOTIFY_TOPIC, cb=self.handle, queue=NOTIFY_QUEUE
+            NOTIFY_TOPIC, cb=self.handle, #queue=NOTIFY_QUEUE
         )
 
     async def shutdown(self):
@@ -39,7 +39,8 @@ class MessageHandler:
     async def handle(self, msg):
         try:
             res = await self.handler(msg.data)
-            await self.nc.publish(msg.reply, res)
+            if res is not None:
+                await self.nc.publish(NOTIFY_UPDATE_ACCEPTED, res)
         except Exception as ex:
             print(ex)
 
@@ -74,11 +75,15 @@ class Entwatcher:
         await self.message_handler.setup()
 
     async def handler(self, data: bytes) -> bytes:
-        res = await self.updates.notify(data.decode("utf-8"))
+        parts = data.split(b"\0")
+        if len(parts) != 2:
+            raise RuntimeError("Wrong size of parts")
+        entity = parts[0].decode("utf-8")
+        res = await self.updates.notify(entity)
         if res:
-            return b"OK"
+            return data
         else:
-            return b"ERR"
+            return None
 
     async def wait_for_shutdown(self):
         await self.shutdown_f
