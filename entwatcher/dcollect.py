@@ -18,6 +18,4 @@ class DCollectClient:
     async def get_pointer(self, entity: str) -> bytes:
         resp = await self.http_client.get(f"{self.url}/entity-ptr/{entity}")
         resp.raise_for_status()
-        if resp.status_code == 404:
-            return None
         return await resp.aread()
