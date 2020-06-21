@@ -16,6 +16,5 @@ class SubscriptionUpdater:
         watcher_data = await self.ef.fetch_json(watcher_entity)
         if watcher_data is None:
             return False
-
-        entities = watcher_data["properties"].values()
+        entities = [prop["value"] for prop in watcher_data.get("properties", []) if prop["kind"] == "ENTITY"]
         await self.nr.add_many_for_action(entities, watcher_entity)
