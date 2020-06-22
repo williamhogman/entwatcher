@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Iterable, List, Tuple
+from typing import AsyncGenerator, Iterable
 
 from pydantic import BaseModel
 
@@ -25,7 +25,6 @@ def path_prefixes(path: str):
 
 def get_path_keys(path: str):
     pfxs = list(path_prefixes(path))
-    last = pfxs[-1]
     but_last = pfxs[:-1]
     for x in but_last:
         yield _wildcard_router_key(x)

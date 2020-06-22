@@ -2,8 +2,6 @@ import asyncio
 import os
 
 import httpx
-import orjson
-from pydantic import BaseModel
 
 from entwatcher.entity_fetcher import EntityFetcher
 from entwatcher.routing import NotificationRouter

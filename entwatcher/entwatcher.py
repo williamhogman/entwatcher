@@ -16,6 +16,7 @@ NOTIFY_TOPIC = "entity-updates-v1"
 NOTIFY_QUEUE = "entwatcher-queue"
 NOTIFY_UPDATE_ACCEPTED = "entity-updates-v1.accepted"
 
+
 class MessageHandler:
     nc: NATS
 
@@ -29,7 +30,7 @@ class MessageHandler:
             loop=asyncio.get_running_loop(),
         )
         self.sub = await self.nc.subscribe(
-            NOTIFY_TOPIC, cb=self.handle, #queue=NOTIFY_QUEUE
+            NOTIFY_TOPIC, cb=self.handle,  # queue=NOTIFY_QUEUE
         )
 
     async def shutdown(self):

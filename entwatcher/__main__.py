@@ -8,12 +8,10 @@ async def amain():
         ew = Entwatcher()
         await ew.setup()
 
-
-    except ex as Exception:
+    except ex:
         print(ex)
     finally:
         await ew.wait_for_shutdown()
-
 
 
 def main():
