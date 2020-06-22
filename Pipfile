@@ -13,6 +13,7 @@ orjson = "*"
 httpx = "*"
 aredis = "*"
 asyncio-nats-client = "*"
+pydantic = "*"
 
 [requires]
 python_version = "3.8"
