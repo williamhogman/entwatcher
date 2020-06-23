@@ -55,6 +55,7 @@ class Entwatcher:
     def __init__(self):
         self.http_client = httpx.AsyncClient()
         self.shutdown_f = asyncio.get_running_loop().create_future()
+        nats = NATS()
         dcollect = DCollectClient(self.http_client)
         cas = CAS(self.http_client)
         entity_fetcher = EntityFetcher(dcollect, cas)
@@ -65,12 +66,12 @@ class Entwatcher:
             entity_fetcher, self.notification_router
         )
         self.updates = UpdatesWorker(
+            nats,
             entity_fetcher,
             self.subscription_updater,
             self.notification_router,
-            self.http_client,
         )
-        self.message_handler = MessageHandler(self.handler, NATS())
+        self.message_handler = MessageHandler(self.handler, nats)
 
     async def setup(self):
         await self.message_handler.setup()
