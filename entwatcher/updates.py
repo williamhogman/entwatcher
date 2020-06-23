@@ -1,8 +1,6 @@
-from nats.aio.client import Client as NATS
 import asyncio
-import os
 
-import httpx
+from nats.aio.client import Client as NATS
 
 from entwatcher.entity_fetcher import EntityFetcher
 from entwatcher.routing import NotificationRouter
@@ -39,7 +37,6 @@ class UpdatesWorker:
     async def notify(self, entity: str):
         matches = self.nr.matches(entity)
         actions = [
-            self.trigger_action(action_id, entity)
-            async for action_id in matches
+            self.trigger_action(action_id, entity) async for action_id in matches
         ]
         return all(await asyncio.gather(*actions))

@@ -66,10 +66,7 @@ class Entwatcher:
             entity_fetcher, self.notification_router
         )
         self.updates = UpdatesWorker(
-            nats,
-            entity_fetcher,
-            self.subscription_updater,
-            self.notification_router,
+            nats, entity_fetcher, self.subscription_updater, self.notification_router,
         )
         self.message_handler = MessageHandler(self.handler, nats)
 

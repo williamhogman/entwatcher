@@ -5,6 +5,7 @@ async def amain():
     ew = None
     try:
         from .entwatcher import Entwatcher
+
         ew = Entwatcher()
         await ew.setup()
     finally:
