@@ -11,7 +11,6 @@ from entwatcher.cas import CAS
 from entwatcher.dcollect import DCollectClient
 from entwatcher.entity_fetcher import EntityFetcher
 from entwatcher.routing import NotificationRouter
-from entwatcher.subscription_updater import SubscriptionUpdater
 from entwatcher.updates import UpdatesWorker
 
 NOTIFY_TOPIC = "entity-updates-v1"
@@ -63,7 +62,6 @@ class Entwatcher:
     http_client: httpx.AsyncClient
     redis: aredis.StrictRedis
     notification_router: NotificationRouter
-    subscription_updater: SubscriptionUpdater
 
     def __init__(self):
         self.http_client = httpx.AsyncClient()
@@ -75,12 +73,7 @@ class Entwatcher:
 
         redis = aredis.StrictRedis.from_url(os.environ["REDIS_URL"])
         self.notification_router = NotificationRouter(redis)
-        self.subscription_updater = SubscriptionUpdater(
-            entity_fetcher, self.notification_router
-        )
-        self.updates = UpdatesWorker(
-            nats, entity_fetcher, self.subscription_updater, self.notification_router,
-        )
+        self.updates = UpdatesWorker(nats, entity_fetcher, self.notification_router)
         self.message_handler = MessageHandler(self.handler, self.action_handler, nats)
 
     async def setup(self):
@@ -100,7 +93,8 @@ class Entwatcher:
     async def action_handler(self, data: bytes) -> bytes:
         params = orjson.loads(data)
         entity = params["entity"]
-        await self.subscription_updater.update(entity)
+        name = params["name"]
+        await self.notification_router.update_entity(name, entity)
         return b"{}"
 
     async def wait_for_shutdown(self):

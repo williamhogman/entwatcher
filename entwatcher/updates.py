@@ -5,26 +5,28 @@ from nats.aio.client import Client as NATS
 
 from entwatcher.entity_fetcher import EntityFetcher
 from entwatcher.routing import NotificationRouter
-from entwatcher.subscription_updater import SubscriptionUpdater
 
 ACTION_TOPIC = "conthesis.action.TriggerAction"
 
+UPDATE_WATCHER_PROTO = {
+    "kind": "entwatcher.UpdateWatchEntity",
+    "properties": [
+        {"name": "name", "kind": "META_FIELD", "value": "updated_entity"},
+        {"name": "entity", "kind": "META_ENTITY", "value": "updated_entity",},
+    ],
+}
+
 
 class UpdatesWorker:
+    nc: NATS
     ef: EntityFetcher
-    su: SubscriptionUpdater
     nr: NotificationRouter
 
     def __init__(
-        self,
-        nc: NATS,
-        ef: EntityFetcher,
-        su: SubscriptionUpdater,
-        nr: NotificationRouter,
+        self, nc: NATS, ef: EntityFetcher, nr: NotificationRouter,
     ):
         self.nc = nc
         self.ef = ef
-        self.su = su
         self.nr = nr
 
     async def trigger_action(self, action_id: bytes, updated_entity: str) -> bool:
@@ -35,16 +37,7 @@ class UpdatesWorker:
             trigger = {
                 "meta": meta,
                 "action_source": "LITERAL",
-                "action": {
-                    "kind": "entwatcher.UpdateWatchEntity",
-                    "properties": [
-                        {
-                            "name": "entity",
-                            "kind": "META_FIELD",
-                            "value": "updated_entity",
-                        }
-                    ],
-                },
+                "action": UPDATE_WATCHER_PROTO,
             }
         else:
             trigger = {

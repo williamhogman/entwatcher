@@ -54,6 +54,13 @@ class NotificationRouter:
             for val in entities
         )
 
+    async def update_entity(self, entity_name: str, watcher_data: dict):
+        if watcher_data is None:
+            return False
+        props = watcher_data.get("properties", [])
+        entities = [prop["value"] for prop in props if prop["kind"] == "ENTITY"]
+        await self.add_many_for_action(entities, entity_name)
+
     async def matches(self, path: str) -> AsyncGenerator[bytes, None]:
         if path.startswith("_conthesis.watcher."):
             yield b"_conthesis.UpdateWatcher"
