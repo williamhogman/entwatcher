@@ -1,12 +1,13 @@
 import asyncio
 
+import orjson
 from nats.aio.client import Client as NATS
 
 from entwatcher.entity_fetcher import EntityFetcher
 from entwatcher.routing import NotificationRouter
 from entwatcher.subscription_updater import SubscriptionUpdater
 
-ACTION_BY_ENTITY_TOPIC = "conthesis.actions.by-entity"
+ACTION_TOPIC = "conthesis.action.TriggerAction"
 
 
 class UpdatesWorker:
@@ -27,11 +28,32 @@ class UpdatesWorker:
         self.nr = nr
 
     async def trigger_action(self, action_id: bytes, updated_entity: str) -> bool:
-        if action_id == b"_conthesis.UpdateWatcher":
-            await self.su.update(updated_entity)
-            return True
+        trigger = None
+        meta = {"updated_entity": updated_entity}
 
-        res = await self.nc.request(ACTION_BY_ENTITY_TOPIC, action_id, timeout=5)
+        if action_id == b"_conthesis.UpdateWatcher":
+            trigger = {
+                "meta": meta,
+                "action_source": "LITERAL",
+                "action": {
+                    "kind": "entwatcher.UpdateWatchEntity",
+                    "properties": [
+                        {
+                            "name": "entity",
+                            "kind": "META_FIELD",
+                            "value": "updated_entity",
+                        }
+                    ],
+                },
+            }
+        else:
+            trigger = {
+                "meta": meta,
+                "action_source": "ENTITY",
+                "action": action_id.decode("utf-8"),
+            }
+
+        res = await self.nc.request(ACTION_TOPIC, orjson.dumps(trigger), timeout=5,)
         return True
 
     async def notify(self, entity: str):

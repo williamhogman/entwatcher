@@ -1,8 +1,10 @@
 import asyncio
 import os
+import traceback
 
 import aredis
 import httpx
+import orjson
 from nats.aio.client import Client as NATS
 
 from entwatcher.cas import CAS
@@ -16,13 +18,16 @@ NOTIFY_TOPIC = "entity-updates-v1"
 NOTIFY_QUEUE = "entwatcher-queue"
 NOTIFY_UPDATE_ACCEPTED = "entity-updates-v1.accepted"
 
+ACTION_TOPIC = "conthesis.action.entwatcher.UpdateWatchEntity"
+
 
 class MessageHandler:
     nc: NATS
 
-    def __init__(self, handler, nc: NATS):
+    def __init__(self, handler, action_handler, nc: NATS):
         self.nc = nc
         self.handler = handler
+        self.action_handler = action_handler
 
     async def setup(self):
         await self.nc.connect(
@@ -32,9 +37,9 @@ class MessageHandler:
         self.sub = await self.nc.subscribe(
             NOTIFY_TOPIC, cb=self.handle,  # queue=NOTIFY_QUEUE
         )
+        self.action_sub = await self.nc.subscribe(ACTION_TOPIC, cb=self.handle_action,)
 
     async def shutdown(self):
-        await self.nc.unsubscribe(self.sub)
         await self.nc.drain()
 
     async def handle(self, msg):
@@ -42,8 +47,16 @@ class MessageHandler:
             res = await self.handler(msg.data)
             if res is not None:
                 await self.nc.publish(NOTIFY_UPDATE_ACCEPTED, res)
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            traceback.print_exc()
+
+    async def handle_action(self, msg):
+        try:
+            res = await self.action_handler(msg.data)
+            if res is not None:
+                await self.nc.publish(msg.reply, res)
+        except Exception:
+            traceback.print_exc()
 
 
 class Entwatcher:
@@ -68,7 +81,7 @@ class Entwatcher:
         self.updates = UpdatesWorker(
             nats, entity_fetcher, self.subscription_updater, self.notification_router,
         )
-        self.message_handler = MessageHandler(self.handler, nats)
+        self.message_handler = MessageHandler(self.handler, self.action_handler, nats)
 
     async def setup(self):
         await self.message_handler.setup()
@@ -83,6 +96,12 @@ class Entwatcher:
             return data
         else:
             return None
+
+    async def action_handler(self, data: bytes) -> bytes:
+        params = orjson.loads(data)
+        entity = params["entity"]
+        await self.subscription_updater.update(entity)
+        return b"{}"
 
     async def wait_for_shutdown(self):
         await self.shutdown_f
