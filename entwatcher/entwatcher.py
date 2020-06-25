@@ -3,13 +3,9 @@ import os
 import traceback
 
 import aredis
-import httpx
 import orjson
 from nats.aio.client import Client as NATS
 
-from entwatcher.cas import CAS
-from entwatcher.dcollect import DCollectClient
-from entwatcher.entity_fetcher import EntityFetcher
 from entwatcher.routing import NotificationRouter
 from entwatcher.updates import UpdatesWorker
 
@@ -59,21 +55,14 @@ class MessageHandler:
 
 
 class Entwatcher:
-    http_client: httpx.AsyncClient
-    redis: aredis.StrictRedis
     notification_router: NotificationRouter
 
     def __init__(self):
-        self.http_client = httpx.AsyncClient()
         self.shutdown_f = asyncio.get_running_loop().create_future()
         nats = NATS()
-        dcollect = DCollectClient(self.http_client)
-        cas = CAS(self.http_client)
-        entity_fetcher = EntityFetcher(dcollect, cas)
-
         redis = aredis.StrictRedis.from_url(os.environ["REDIS_URL"])
         self.notification_router = NotificationRouter(redis)
-        self.updates = UpdatesWorker(nats, entity_fetcher, self.notification_router)
+        self.updates = UpdatesWorker(nats, self.notification_router)
         self.message_handler = MessageHandler(self.handler, self.action_handler, nats)
 
     async def setup(self):
@@ -103,6 +92,5 @@ class Entwatcher:
     async def shutdown(self):
         try:
             await self.message_handler.shutdown()
-            await self.http_client.aclose()
         finally:
             self.shutdown_f.set_result(True)

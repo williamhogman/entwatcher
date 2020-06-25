@@ -3,7 +3,6 @@ import asyncio
 import orjson
 from nats.aio.client import Client as NATS
 
-from entwatcher.entity_fetcher import EntityFetcher
 from entwatcher.routing import NotificationRouter
 
 ACTION_TOPIC = "conthesis.action.TriggerAction"
@@ -19,14 +18,12 @@ UPDATE_WATCHER_PROTO = {
 
 class UpdatesWorker:
     nc: NATS
-    ef: EntityFetcher
     nr: NotificationRouter
 
     def __init__(
-        self, nc: NATS, ef: EntityFetcher, nr: NotificationRouter,
+        self, nc: NATS, nr: NotificationRouter,
     ):
         self.nc = nc
-        self.ef = ef
         self.nr = nr
 
     async def trigger_action(self, action_id: bytes, updated_entity: str) -> bool:
