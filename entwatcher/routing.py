@@ -1,3 +1,4 @@
+import itertools
 from typing import AsyncGenerator, Iterable
 
 from pydantic import BaseModel
@@ -7,6 +8,13 @@ class RoutingTableEntry(BaseModel):
     path: str
     action_id: str
     is_absolute: bool
+
+    @classmethod
+    def many_of(
+        cls, action_id: str, is_absolute: bool, xs: Iterable[str]
+    ) -> Iterable["RoutingTableEntry"]:
+        for x in xs:
+            yield cls(path=x, action_id=action_id, is_absolute=is_absolute)
 
 
 def _absolute_router_key(path: str) -> bytes:
@@ -49,17 +57,27 @@ class NotificationRouter:
 
     async def add_many_for_action(self, entities: Iterable[str], action_id: str):
         """Adds watches between the entities listed and the action_id provided"""
-        await self.add_many(
-            RoutingTableEntry(path=val, action_id=action_id, is_absolute=True)
-            for val in entities
-        )
 
     async def update_entity(self, entity_name: str, watcher_data: dict):
         if watcher_data is None:
             return False
         props = watcher_data.get("properties", [])
-        entities = [prop["value"] for prop in props if prop["kind"] == "ENTITY"]
-        await self.add_many_for_action(entities, entity_name)
+        wildcard_triggers = watcher_data.get("wildcard_triggers", [])
+
+        absolute = RoutingTableEntry.many_of(
+            entity_name,
+            True,
+            (
+                prop["value"]
+                for prop in props
+                if prop.get("kind") == "ENTITY" and "value" in prop
+            ),
+        )
+
+        wildcards = RoutingTableEntry.many_of(
+            entity_name, False, (x for x in wildcard_triggers if x)
+        )
+        await self.add_many(itertools.chain(absolute, wildcards))
 
     async def matches(self, path: str) -> AsyncGenerator[bytes, None]:
         if path.startswith("_conthesis.watcher."):
