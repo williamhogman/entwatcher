@@ -27,7 +27,7 @@ def _wildcard_router_key(path: str) -> bytes:
 
 def path_prefixes(path: str):
     segments = path.split(".")
-    for i in range(len(segments)):
+    for i in range(1, len(segments) + 1):
         yield ".".join(segments[0:i])
 
 
@@ -55,9 +55,6 @@ class NotificationRouter:
         for ent in entries:
             await self.add(ent)
 
-    async def add_many_for_action(self, entities: Iterable[str], action_id: str):
-        """Adds watches between the entities listed and the action_id provided"""
-
     async def update_entity(self, entity_name: str, watcher_data: dict):
         if watcher_data is None:
             return False
@@ -80,7 +77,5 @@ class NotificationRouter:
         await self.add_many(itertools.chain(absolute, wildcards))
 
     async def matches(self, path: str) -> AsyncGenerator[bytes, None]:
-        if path.startswith("_conthesis.watcher."):
-            yield b"_conthesis.UpdateWatcher"
         for x in await self.redis.sunion(list(get_path_keys(path))):
             yield x
