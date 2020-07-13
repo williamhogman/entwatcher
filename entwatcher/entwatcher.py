@@ -69,7 +69,7 @@ class Entwatcher:
         await self.message_handler.setup()
 
     async def handler(self, data: bytes) -> bytes:
-        parts = data.split(b"\0")
+        parts = data.split(b"\0", 1)
         if len(parts) != 2:
             raise RuntimeError("Wrong size of parts")
         entity = parts[0].decode("utf-8")

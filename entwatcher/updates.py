@@ -30,18 +30,11 @@ class UpdatesWorker:
         trigger = None
         meta = {"updated_entity": updated_entity}
 
-        if action_id == b"_conthesis.UpdateWatcher":
-            trigger = {
-                "meta": meta,
-                "action_source": "LITERAL",
-                "action": UPDATE_WATCHER_PROTO,
-            }
-        else:
-            trigger = {
-                "meta": meta,
-                "action_source": "ENTITY",
-                "action": action_id.decode("utf-8"),
-            }
+        trigger = {
+            "meta": meta,
+            "action_source": "ENTITY",
+            "action": action_id.decode("utf-8"),
+        }
 
         res = await self.nc.request(ACTION_TOPIC, orjson.dumps(trigger), timeout=5,)
         return True
