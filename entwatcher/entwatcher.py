@@ -31,6 +31,7 @@ class MessageHandler:
         )
         self.sub = await self.nc.subscribe(
             NOTIFY_TOPIC, cb=self.handle,  # queue=NOTIFY_QUEUE
+            is_async=True
         )
         self.action_sub = await self.nc.subscribe(ACTION_TOPIC, cb=self.handle_action,)
 
@@ -73,7 +74,7 @@ class Entwatcher:
         if len(parts) != 2:
             raise RuntimeError("Wrong size of parts")
         entity = parts[0].decode("utf-8")
-        res = await self.updates.notify(entity)
+        res = await self.updates.notify(data.decode("utf-8"), entity)
         if res:
             return data
         else:
