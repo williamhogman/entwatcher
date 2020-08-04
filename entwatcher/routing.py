@@ -24,11 +24,12 @@ def _absolute_router_key(path: str) -> bytes:
 def _wildcard_router_key(path: str) -> bytes:
     return b"entwatcher_wildcard_routes:" + path.encode("utf-8")
 
+SEP = "/"
 
 def path_prefixes(path: str):
-    segments = path.split(".")
+    segments = path.split(SEP)
     for i in range(1, len(segments) + 1):
-        yield ".".join(segments[0:i])
+        yield SEP.join(segments[0:i])
 
 
 def get_path_keys(path: str):

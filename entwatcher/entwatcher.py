@@ -33,7 +33,7 @@ class MessageHandler:
             NOTIFY_TOPIC, cb=self.handle,  # queue=NOTIFY_QUEUE
             is_async=True
         )
-        self.action_sub = await self.nc.subscribe(ACTION_TOPIC, cb=self.handle_action,)
+        self.action_sub = await self.nc.subscribe(ACTION_TOPIC, cb=self.handle_action, is_async=True)
 
     async def shutdown(self):
         await self.nc.drain()
@@ -49,8 +49,7 @@ class MessageHandler:
     async def handle_action(self, msg):
         try:
             res = await self.action_handler(msg.data)
-            if res is not None:
-                await self.nc.publish(msg.reply, res)
+            await self.nc.publish(msg.reply, b"{}")
         except Exception:
             traceback.print_exc()
 
@@ -85,7 +84,6 @@ class Entwatcher:
         entity = params["entity"]
         name = params["name"]
         await self.notification_router.update_entity(name, entity)
-        return b"{}"
 
     async def wait_for_shutdown(self):
         await self.shutdown_f
