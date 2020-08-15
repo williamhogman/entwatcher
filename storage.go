@@ -75,6 +75,9 @@ func constructKeys(absoluteKeys []string, wildcards []string) []string {
 
 func (rs *RedisStorage) AddWatches(ctx context.Context, value string, absoluteKeys []string, wildcards []string) error {
 	keys := constructKeys(absoluteKeys, wildcards)
+	if len(keys) == 0 {
+		return nil
+	}
 	_, err := rs.client.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 		for _, x := range keys {
 			pipe.SAdd(ctx, x, value)
@@ -86,5 +89,8 @@ func (rs *RedisStorage) AddWatches(ctx context.Context, value string, absoluteKe
 
 func (rs *RedisStorage) Match(ctx context.Context, absoluteKeys []string, wildcards []string) ([]string, error) {
 	keys := constructKeys(absoluteKeys, wildcards)
+	if len(keys) == 0 {
+		return []string{}, nil
+	}
 	return rs.client.SUnion(ctx, keys...).Result()
 }

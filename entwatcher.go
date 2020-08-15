@@ -9,6 +9,7 @@ func NewSubscriptions(h *Handler) Subs {
 	return &map[string]nats.MsgHandler{
 		"conthesis.action.entwatcher.UpdateWatchEntity": h.Action,
 		"entity-updates-v1": h.Update,
+		ConfirmTopicBase + "*": h.HandleConfirm,
 	}
 }
 

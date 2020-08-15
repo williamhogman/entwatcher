@@ -6,22 +6,22 @@ import (
 )
 
 type ActionProperty struct {
-	kind  string
-	value string
+	Kind  string `json:"kind"`
+	Value string `json:"value"`
 }
 
 type WatcherEntity struct {
-	Properties       []ActionProperty
+	Properties       []ActionProperty `json:"properties"`
 	WildcardTriggers []string `json:"wildcard_triggers"`
 }
 
 func (we *WatcherEntity) NamedEntities() []string {
-	var result []string
+	result := make([]string, 0, len(we.Properties) / 2)
 	for _, v := range we.Properties {
-		if v.kind == "ENTITY" {
-			result = append(result, v.value)
-		} else if v.kind == "PATH" {
-			entity := strings.TrimPrefix(v.value, "/entity/")
+		if v.Kind == "ENTITY" {
+			result = append(result, v.Value)
+		} else if v.Kind == "PATH" {
+			entity := strings.TrimPrefix(v.Value, "/entity/")
 			result = append(result, entity)
 		}
 	}
@@ -33,8 +33,8 @@ func (we *WatcherEntity) AllWatched() ([]string, []string) {
 }
 
 type UpdateAction struct {
-	entity WatcherEntity
-	name   string
+	Entity WatcherEntity `json:"entity"`
+	Name   string `json:"name"`
 }
 
 
@@ -43,8 +43,8 @@ func AllWatched(data []byte) (string, []string, []string, error) {
 	if err != nil {
 		return "", nil, nil, err
 	}
-	named, wildcards := action.entity.AllWatched()
-	return action.name, named, wildcards, nil
+	named, wildcards := action.Entity.AllWatched()
+	return action.Name, named, wildcards, nil
 }
 
 func readAction(data []byte) (*UpdateAction, error) {

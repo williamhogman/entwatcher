@@ -8,18 +8,18 @@ type Meta struct {
 	UpdatedEntity string `json:"updated_entity"`
 }
 type Trigger struct {
-	Jid           string
-	Meta          Meta
+	Jid           string `json:"jid"`
+	Meta          Meta `json:"meta"`
 	ActionSource string `json:"action_source"`
-	Action       string
+	Action       string `json:"action"`
 }
 
 func NewTrigger(jid string, updated_entity string, action_id string) *Trigger {
 	return &Trigger{
 		jid + "/" + action_id,
 		Meta{updated_entity},
-		"ENTITY",
-		action_id,
+		"PATH",
+		"/entity/" + action_id,
 	}
 }
 
