@@ -105,12 +105,12 @@ func (handler *Handler) Update(m *nats.Msg) {
 		for _, match := range matches {
 			data, err := NewTrigger(mData, entity, match).AsBytes()
 			if err != nil {
-				log.Printf("Error marshaling data %v")
+				log.Printf("Error marshaling data %v", err)
 				continue
 			}
 			_, err = handler.nats.RequestWithContext(ctx, ActionTopic, data)
 			if err != nil {
-				log.Printf("Unable to publish message")
+				log.Printf("Unable to publish message %v", err)
 				allOk = false
 			}
 		}
