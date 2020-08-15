@@ -14,17 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - uses: actions/setup-python@v2
+    - name: Install Go
+      uses: actions/setup-go@v2
       with:
-        python-version: '3.8'
-    - name: Install dependecies
-      uses: VaultVulp/action-pipenv@v2.0.1
-      with:
-        command: install -d
-    - name: Run tests
-      uses: VaultVulp/action-pipenv@v2.0.1
-      with:
-        command: run test
+        go-version: 1.14.x
+    - name: test
+      run: go test ./...
   build:
     needs: [test]
     runs-on: ubuntu-latest
