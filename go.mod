@@ -3,7 +3,7 @@ module github.com/conthesis/entwatcher
 go 1.14
 
 require (
-	github.com/go-redis/redis/v8 v8.0.0-beta.7
+	github.com/go-redis/redis/v8 v8.5.0
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/nats-io/nats-server/v2 v2.1.7 // indirect
